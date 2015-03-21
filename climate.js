@@ -2,12 +2,18 @@ var tessel = require('tessel');
 var climatelib = require('climate-si7005');
 var climate;
 
+var MODULE_NAME = 'climate';
 
+// ---------------------------------------------------------
+//
+//  EXPOSED METHODS
+//
+// ---------------------------------------------------------
 
 exports.init = function (port, callback) {
   climate = climatelib.use(tessel.port[port]);
   climate.on('ready', function () {
-    callback();
+    callback(MODULE_NAME);
   });
 };
 
@@ -40,3 +46,9 @@ exports.getCurrentWeather = function (callback) {
     });
   });
 };
+
+// ---------------------------------------------------------
+//
+//  HELPERS
+//
+// ---------------------------------------------------------
