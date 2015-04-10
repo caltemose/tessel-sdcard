@@ -1,35 +1,40 @@
 var tessel = require('tessel');
+var wifi = require('wifi-cc3000');
 var logger = require('./logger');
 var climate = require('./climate');
 var ambient = require('./ambient');
 
-var modules = [
-  {
-    name: 'sdcard',
+var modules = {
+  sdcard: {
     port: 'B',
-  }
-  ,{
-    name: 'climate',
+  },
+  climate: {
     port: 'D',
-  }
-  ,{
-    name: 'ambient',
+  },
+  ambient: {
     port: 'A'
   }
-];
+};
 
+var sensorData = {};
+
+var init = function () {
+  climate.init(modules.climate.port, onModuleReady);
+  logger.init(modules.sdcard.port, onModuleReady);
+  ambient.init(modules.ambient.port, onModuleReady);
+};
 
 var onModuleReady = function (module) {
-  var i, len = modules.length, allReady = true;
-  for(i=0; i<len; i++) {
-    if (modules[i].name === module) {
-      modules[i].ready = true;
-      console.log(modules[i].name + ' is ready.');
+  var m, ready = true;
+  for (m in modules) {
+    if (m === module) {
+      modules[m].ready = true;
+      console.log(m + ' is ready');
     }
-    if (!modules[i].ready)
-      allReady = false;
+    if (!modules[m].ready)
+      ready = false;
   }
-  if (allReady) {
+  if (ready) {
     console.log('all modules ready.');
     getAllData();
   }
@@ -41,25 +46,35 @@ var getAllData = function () {
 
 var onClimateData = function (weather) {
   console.log(weather);
+  sensorData.weather = weather;
   ambient.getAmbience(onAmbientData);
 };
 
 var onAmbientData = function (ambience) {
   console.log(ambience);
+  sensorData.ambience = ambience;
   writeToCard();
 };
 
 var writeToCard = function () {
-  var date = new Date();
-  logger.writeLog(date.toString(), onLogWritten);
+  var now = new Date();
+  var msg = now.toISOString() + ' ';
+  msg += sensorData.weather.temp.f + 'F ';
+  msg += sensorData.weather.temp.c + 'C ';
+  msg += sensorData.weather.humid + 'RH ';
+  msg += sensorData.ambience.light + 'L ';
+  msg += sensorData.ambience.sound + 'S ';
+  msg += '\n';
+  console.log('writing log...');
+  logger.writeLog(msg, onLogWritten);
 };
 
 var onLogWritten = function (results) {
+  console.log('log written.');
   console.log(results);
 };
 
-
-
-climate.init('D', onModuleReady);
-logger.init('B', onModuleReady);
-ambient.init('A', onModuleReady);
+wifi.on('connect', function (data) {
+  console.log('wifi connected');
+  init();
+});

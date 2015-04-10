@@ -20,7 +20,7 @@ exports.writeLog = function (msg, callback) {
   sdcard.getFilesystems(function (err, fss) {
     var fs = fss[0];
     var filename = 'logger.txt';
-    fs.writeFile(filename, msg, function (err) {
+    fs.appendFile(filename, msg, function (err) {
       if (err)
         callback({err:err})
       else

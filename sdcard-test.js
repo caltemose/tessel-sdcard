@@ -17,12 +17,17 @@ sdcard.on('ready', function() {
     //   });
     // });
     
-    fs.readdir('/', function (err, files) {
-      if (err)
-        console.log(err);
-      if (files)
-        console.log(files);
-    });
+    fs.readFile('logger.txt', function(err, data) {
+      console.log('Read:\n', data.toString());
+    }); 
+    
+
+    // fs.readdir('/', function (err, files) {
+    //   if (err)
+    //     console.log(err);
+    //   if (files)
+    //     console.log(files);
+    // });
     
   });
 });
